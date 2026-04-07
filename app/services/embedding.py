@@ -1,6 +1,6 @@
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
 
 def get_embeddings(texts: list[str]) -> list[list[float]]:
-    return model.encode(texts).tolist()
+    return [emb.tolist() for emb in model.embed(texts)]
