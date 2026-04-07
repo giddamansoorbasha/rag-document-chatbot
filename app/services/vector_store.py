@@ -1,25 +1,61 @@
-import chromadb
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine
+from sqlalchemy.orm import sessionmaker
+from pgvector.sqlalchemy import Vector
+from app.core.database import Base, engine, SessionLocal
 from app.services.embedding import get_embeddings
 
-client = chromadb.PersistentClient(path="./chroma_db")
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
 
-def create_collection(collection_name: str):
-    return client.get_or_create_collection(collection_name)
+    id               = Column(Integer, primary_key=True, index=True)
+    collection_name  = Column(String, nullable=False, index=True)
+    content          = Column(Text, nullable=False)
+    embedding        = Column(Vector(384))          # all-MiniLM-L6-v2 = 384 dims
+
+
+Base.metadata.create_all(bind=engine)
 
 def add_chunks(collection_name: str, chunks: list[str], ids: list[str]):
-    collection = create_collection(collection_name)
-    embeddings = get_embeddings(chunks)
-    collection.add(
-        documents=chunks,
-        embeddings=embeddings,
-        ids=ids
-    )
+    """Embed chunks and store them in PostgreSQL."""
+    embeddings = get_embeddings(chunks)          # list of 384-dim float lists
+    db = SessionLocal()
+    try:
+        for content, embedding in zip(chunks, embeddings):
+            chunk = DocumentChunk(
+                collection_name=collection_name,
+                content=content,
+                embedding=embedding,
+            )
+            db.add(chunk)
+        db.commit()
+    finally:
+        db.close()
+
 
 def search_chunks(collection_name: str, query: str, n_results: int = 3) -> list[str]:
-    collection = create_collection(collection_name)
-    query_embedding = get_embeddings([query])
-    results = collection.query(
-        query_embeddings=query_embedding,
-        n_results=n_results
-    )
-    return results["documents"][0]
+    """Return the top-n most similar chunks for a query."""
+    query_embedding = get_embeddings([query])[0]
+    db = SessionLocal()
+    try:
+        results = (
+            db.query(DocumentChunk)
+            .filter(DocumentChunk.collection_name == collection_name)
+            .order_by(DocumentChunk.embedding.cosine_distance(query_embedding))
+            .limit(n_results)
+            .all()
+        )
+        return [r.content for r in results]
+    finally:
+        db.close()
+
+
+def delete_chunks(collection_name: str):
+    """Delete all chunks for a document (useful if you add a delete doc endpoint)."""
+    db = SessionLocal()
+    try:
+        db.query(DocumentChunk).filter(
+            DocumentChunk.collection_name == collection_name
+        ).delete()
+        db.commit()
+    finally:
+        db.close()
