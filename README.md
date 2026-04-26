@@ -2,6 +2,8 @@
 
 A production-ready REST API that lets users upload documents (PDF/TXT) and chat with them using AI. Built with FastAPI, pgvector, and Groq (LLaMA 3).
 
+Live Link:  https://rag-document-chatbot-3jqq.onrender.com/docs 
+
 ---
 
 ## What it does
