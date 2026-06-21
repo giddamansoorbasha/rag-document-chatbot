@@ -5,6 +5,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.document import Document
 from app.schemas.document import DocumentResponse
+from app.services.vector_store import add_chunks, delete_chunks
 from app.services.vector_store import add_chunks
 import uuid
 import PyPDF2
@@ -67,3 +68,23 @@ def upload_document(
 @docsroute.get("/", response_model=list[DocumentResponse])
 def list_documents(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return db.query(Document).filter(Document.user_id == user.id).all()
+
+@docsroute.delete("/{doc_id}")
+def delete_document(
+    doc_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    doc = db.query(Document).filter(
+        Document.id == doc_id,
+        Document.user_id == user.id  # ✅ only owner can delete
+    ).first()
+
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    delete_chunks(doc.collection_name)  # delete from document_chunks
+    db.delete(doc)                      # delete from documents
+    db.commit()
+
+    return {"message": f"Document '{doc.filename}' deleted successfully"}
