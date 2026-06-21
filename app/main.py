@@ -11,7 +11,10 @@ app = FastAPI(title="RAG Document Chatbot")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    origins = [
+    "http://localhost:3000",
+    "https://rag-ui-phi-eight.vercel.app/"
+    ], 
     allow_credentials=False,
     allow_methods=["*"],  
     allow_headers=["*"],  
