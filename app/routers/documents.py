@@ -10,30 +10,42 @@ from app.services.vector_store import add_chunks
 import uuid
 import PyPDF2
 import io
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 docsroute = APIRouter(prefix="/documents", tags=["Documents"])
 
 def extract_text(file: UploadFile) -> str:
     content = file.file.read()
+
     if file.filename.endswith(".pdf"):
         pdf = PyPDF2.PdfReader(io.BytesIO(content))
-        return " ".join(page.extract_text() for page in pdf.pages)
+
+        text = ""
+
+        for page in pdf.pages:
+            page_text = page.extract_text()
+
+            if page_text:
+                text += page_text + "\n\n"
+
+        return text
+
     return content.decode("utf-8")
 
-def chunk_text(text: str, chunk_size: int = 500) -> list[str]:
-    words = text.split()
-    chunks = []
-    current = []
-    count = 0
-    for word in words:
-        current.append(word)
-        count += len(word) + 1
-        if count >= chunk_size:
-            chunks.append(" ".join(current))
-            current = []
-            count = 0
-    if current:
-        chunks.append(" ".join(current))
+def chunk_text(text: str) -> list[str]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=800,
+        chunk_overlap=150,
+        separators=[
+            "\n\n",
+            "\n",
+            ". ",
+            " ",
+            ""
+        ]
+    )
+    chunks = splitter.split_text(text)
+
     return chunks
 
 @docsroute.post("/upload", response_model=DocumentResponse)
