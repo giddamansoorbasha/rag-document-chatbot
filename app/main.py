@@ -21,10 +21,6 @@ app.include_router(authroute)
 app.include_router(docsroute)
 app.include_router(chatroute)
 
-@app.options("/{rest_of_path:path}")
-def preflight_handler(rest_of_path: str):
-    return Response(status_code=200)
-
 @app.get("/")
 def home():
     return {"message": "RAG Document Chatbot API"}
