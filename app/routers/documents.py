@@ -46,11 +46,9 @@ def upload_document(
 
     text = extract_text(file)
     chunks = chunk_text(text)
-
     collection_name = f"doc_{uuid.uuid4().hex}"
-    chunk_ids = [f"{collection_name}_chunk_{i}" for i in range(len(chunks))]
-    add_chunks(collection_name, chunks, chunk_ids)
 
+    # Create doc FIRST to get doc.id
     doc = Document(
         user_id=user.id,
         filename=file.filename,
@@ -58,7 +56,12 @@ def upload_document(
     )
     db.add(doc)
     db.commit()
-    db.refresh(doc)
+    db.refresh(doc)  # now doc.id exists
+
+    # Now pass user_id and doc_id
+    chunk_ids = [f"{collection_name}_chunk_{i}" for i in range(len(chunks))]
+    add_chunks(collection_name, chunks, chunk_ids, user_id=user.id, doc_id=doc.id)
+
     return doc
 
 @docsroute.get("/", response_model=list[DocumentResponse])

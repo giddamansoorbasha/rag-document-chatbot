@@ -12,10 +12,13 @@ class DocumentChunk(Base):
     content          = Column(Text, nullable=False)
     embedding        = Column(Vector(384))          # all-MiniLM-L6-v2 = 384 dims
 
+    user_id   = Column(Integer, ForeignKey("users.id"), nullable=True)
+    doc_id    = Column(Integer, ForeignKey("documents.id"), nullable=True)
+
 
 Base.metadata.create_all(bind=engine)
 
-def add_chunks(collection_name: str, chunks: list[str], ids: list[str]):
+def add_chunks(collection_name: str, chunks: list[str], ids: list[str], user_id: int = None, doc_id: int = None):
     """Embed chunks and store them in PostgreSQL."""
     embeddings = get_embeddings(chunks)          # list of 384-dim float lists
     db = SessionLocal()
@@ -25,6 +28,8 @@ def add_chunks(collection_name: str, chunks: list[str], ids: list[str]):
                 collection_name=collection_name,
                 content=content,
                 embedding=embedding,
+                user_id=user_id,   
+                doc_id=doc_id
             )
             db.add(chunk)
         db.commit()
