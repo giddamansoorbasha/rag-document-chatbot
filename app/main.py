@@ -3,10 +3,19 @@ from app.core.database import Base, engine
 from app.routers.auth import authroute
 from app.routers.documents import docsroute
 from app.routers.chat import chatroute
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="RAG Document Chatbot")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
 
 app.include_router(authroute)
 app.include_router(docsroute)

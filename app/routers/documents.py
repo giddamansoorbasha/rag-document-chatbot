@@ -61,7 +61,6 @@ def upload_document(
     chunks = chunk_text(text)
     collection_name = f"doc_{uuid.uuid4().hex}"
 
-    # Create doc FIRST to get doc.id
     doc = Document(
         user_id=user.id,
         filename=file.filename,
@@ -69,7 +68,7 @@ def upload_document(
     )
     db.add(doc)
     db.commit()
-    db.refresh(doc)  # now doc.id exists
+    db.refresh(doc)  
 
     # Now pass user_id and doc_id
     chunk_ids = [f"{collection_name}_chunk_{i}" for i in range(len(chunks))]
@@ -89,14 +88,14 @@ def delete_document(
 ):
     doc = db.query(Document).filter(
         Document.id == doc_id,
-        Document.user_id == user.id  # ✅ only owner can delete
+        Document.user_id == user.id 
     ).first()
 
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    delete_chunks(doc.collection_name)  # delete from document_chunks
-    db.delete(doc)                      # delete from documents
+    delete_chunks(doc.collection_name)  
+    db.delete(doc)                      
     db.commit()
 
     return {"message": f"Document '{doc.filename}' deleted successfully"}

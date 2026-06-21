@@ -7,4 +7,4 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     question: str
     answer: str
-    sources: list[str]  # top chunks used to answer
+    sources: list[str]  
