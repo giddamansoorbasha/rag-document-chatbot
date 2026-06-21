@@ -1,245 +1,377 @@
-# RAG Document Chatbot
+# RAG Document Chatbot API 🤖📄
 
-A production-ready REST API that lets users upload documents (PDF/TXT) and chat with them using AI. Built with FastAPI, pgvector, and Groq (LLaMA 3).
+A production-ready Retrieval-Augmented Generation (RAG) REST API that allows users to upload PDF/TXT documents and chat with them using AI.
 
-Live Link:  https://rag-document-chatbot-3jqq.onrender.com/docs 
+Built with **FastAPI**, **PostgreSQL + pgvector**, and **Groq LLMs**.
 
----
+## 🚀 Live Demo
 
-## What it does
+### Swagger API Documentation
 
-1. User signs up and logs in → gets a JWT token
-2. User uploads a PDF or TXT file → app extracts text, splits into chunks, embeds them using `sentence-transformers`, and stores vectors in PostgreSQL via pgvector
-3. User asks a question about the document → app finds the most semantically similar chunks via cosine similarity search
-4. Those chunks are sent to Groq (LLaMA 3.3 70B) as context → AI answers based only on the document
-5. User gets an answer with the source chunks that were used
+https://rag-document-chatbot-3jqq.onrender.com/docs
 
 ---
 
-## Tech stack
+# ✨ Features
 
-| Layer | Technology |
-|---|---|
-| API framework | FastAPI |
-| Database | PostgreSQL (Supabase) |
-| Vector search | pgvector |
-| Embeddings | sentence-transformers (all-MiniLM-L6-v2) |
-| LLM | Groq API — LLaMA 3.3 70B |
-| Auth | JWT (python-jose) + bcrypt |
-| ORM | SQLAlchemy |
-| Containerization | Docker + Docker Compose |
+* 🔐 JWT Authentication (Signup/Login)
+* 📄 Upload PDF and TXT documents
+* ✂️ Intelligent document chunking using RecursiveCharacterTextSplitter
+* 🧠 Semantic search using vector embeddings
+* 💬 Ask questions about uploaded documents
+* 📚 Source chunk citations for transparency
+* 👤 User-specific document isolation
+* 🗑️ Delete uploaded documents
+* ⚡ Fast LLM inference using Groq
+* 📖 Interactive Swagger/OpenAPI documentation
+* 🐳 Dockerized and production-ready
 
 ---
 
-## Project structure
+# 🏗️ Architecture
 
+```text
+Client (Swagger UI / React / Streamlit / Mobile App)
+                            │
+                            ▼
+                    FastAPI REST API
+                            │
+          ┌─────────────────┴─────────────────┐
+          ▼                                   ▼
+ PostgreSQL + pgvector                 Groq LLM API
+ (Users + Documents + Vectors)      (Llama 3.3 70B)
 ```
+
+---
+
+# 🛠️ Tech Stack
+
+| Layer            | Technology                               |
+| ---------------- | ---------------------------------------- |
+| API Framework    | FastAPI                                  |
+| Database         | PostgreSQL (Supabase)                    |
+| Vector Search    | pgvector                                 |
+| ORM              | SQLAlchemy                               |
+| Authentication   | JWT + bcrypt                             |
+| Embeddings       | FastEmbed + BAAI/bge-small-en-v1.5       |
+| LLM              | Groq API (Llama 3.3 70B Versatile)       |
+| Chunking         | LangChain RecursiveCharacterTextSplitter |
+| API Docs         | Swagger/OpenAPI                          |
+| Deployment       | Render                                   |
+| Containerization | Docker                                   |
+
+---
+
+# 📂 Project Structure
+
+```text
 rag-document-chatbot/
+│
 ├── app/
 │   ├── core/
-│   │   ├── config.py          # Pydantic settings from .env
-│   │   ├── database.py        # SQLAlchemy engine + session
-│   │   └── security.py        # JWT, password hashing, get_current_user
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── security.py
+│   │
 │   ├── models/
-│   │   ├── user.py            # User table
-│   │   └── document.py        # Document metadata table
+│   │   ├── user.py
+│   │   └── document.py
+│   │   
+│   │
 │   ├── routers/
-│   │   ├── auth.py            # POST /auth/signup, /auth/login
-│   │   ├── documents.py       # POST /documents/upload, GET /documents/
-│   │   └── chat.py            # POST /chat/
+│   │   ├── auth.py
+│   │   ├── documents.py
+│   │   └── chat.py
+│   │
 │   ├── schemas/
 │   │   ├── user.py
 │   │   ├── document.py
 │   │   └── chat.py
+│   │
 │   └── services/
-│       ├── embedding.py       # sentence-transformers wrapper
-│       ├── llm.py             # Groq API wrapper
-│       └── vector_store.py    # pgvector add/search/delete
+│       ├── embedding.py
+│       ├── vector_store.py
+│       └── llm.py
+│
 ├── main.py
+├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
+├── README.md
 └── .env
 ```
 
 ---
 
-## Local setup
+# ⚙️ Local Setup
 
-### Prerequisites
+## Prerequisites
 
-- Docker + Docker Compose
-- A [Groq API key](https://console.groq.com) (free)
-- A [Supabase](https://supabase.com) project (free) — or local Postgres
+* Python 3.10+
+* Docker + Docker Compose (optional)
+* PostgreSQL / Supabase
+* Groq API Key
 
-### 1. Clone and configure
+---
+
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/yourusername/rag-document-chatbot.git
+
 cd rag-document-chatbot
 ```
 
-Create a `.env` file in the root:
+---
 
-```dotenv
-DATABASE_URL=postgresql://postgres:yourpassword@db.xxxx.supabase.co:5432/postgres
-SECRET_KEY=your-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_TIME=30
-REFRESH_TOKEN_TIME=7
-GROQ_API_KEY=your-groq-api-key
+## 2. Create Virtual Environment
+
+### Linux / macOS
+
+```bash
+python -m venv venv
+
+source venv/bin/activate
 ```
 
-### 2. Enable pgvector (Supabase only — skip if using local Postgres)
+### Windows
 
-In Supabase dashboard → SQL Editor:
+```bash
+python -m venv venv
+
+venv\Scripts\activate
+```
+
+---
+
+## 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 4. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+DATABASE_URL=postgresql://postgres:password@host:5432/postgres
+
+SECRET_KEY=your_secret_key
+
+ALGORITHM=HS256
+
+ACCESS_TOKEN_TIME=30
+
+REFRESH_TOKEN_TIME=7
+
+GROQ_API_KEY=your_groq_api_key
+```
+
+---
+
+## 5. Enable pgvector
+
+If using Supabase, execute:
 
 ```sql
 create extension if not exists vector;
 ```
 
-### 3. Run with Docker
+---
+
+## 6. Run the API
+
+```bash
+uvicorn app.main:app --reload
+```
+
+API:
+
+```text
+http://localhost:8000
+```
+
+Swagger Docs:
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+# 🔐 API Endpoints
+
+## Authentication
+
+| Method | Endpoint       | Description                 |
+| ------ | -------------- | --------------------------- |
+| POST   | `/auth/signup` | Register a new user         |
+| POST   | `/auth/login`  | Login and receive JWT token |
+
+---
+
+## Documents
+
+| Method | Endpoint            | Description                       |
+| ------ | ------------------- | --------------------------------- |
+| POST   | `/documents/upload` | Upload a PDF/TXT document         |
+| GET    | `/documents/`       | Get all documents of current user |
+| DELETE | `/documents/{id}`   | Delete a document                 |
+
+---
+
+## Chat
+
+| Method | Endpoint | Description                    |
+| ------ | -------- | ------------------------------ |
+| POST   | `/chat/` | Ask questions about a document |
+
+---
+
+# Example Chat Request
+
+```json
+{
+    "document_id": 1,
+    "question": "What are the main topics discussed in this document?"
+}
+```
+
+---
+
+# Example Response
+
+```json
+{
+    "answer": "The document discusses ...",
+    "sources": [
+        "Chunk 1 text...",
+        "Chunk 2 text...",
+        "Chunk 3 text..."
+    ]
+}
+```
+
+---
+
+# 🔄 How the RAG Pipeline Works
+
+```text
+User uploads PDF/TXT
+            │
+            ▼
+Extract text
+(PyPDF2 / plain text)
+            │
+            ▼
+Split text into overlapping chunks
+(RecursiveCharacterTextSplitter)
+            │
+            ▼
+Generate embeddings
+(BAAI/bge-small-en-v1.5)
+            │
+            ▼
+Store chunks + vectors
+(PostgreSQL + pgvector)
+            │
+            ▼
+User asks a question
+            │
+            ▼
+Generate query embedding
+            │
+            ▼
+Cosine similarity search
+(top relevant chunks)
+            │
+            ▼
+Send retrieved chunks to Groq LLM
+            │
+            ▼
+Generate answer grounded on document context
+            │
+            ▼
+Return answer + source chunks
+```
+
+---
+
+# 🐳 Docker
+
+Run using Docker:
 
 ```bash
 docker-compose up --build
 ```
 
-API is now running at `http://localhost:8000`
+---
 
-Interactive docs (Swagger UI): `http://localhost:8000/docs`
+# 🌍 Deployment
+
+## Backend Deployment
+
+The API is deployed on Render.
+
+Deployment Steps:
+
+1. Push code to GitHub.
+2. Create a new Render Web Service.
+3. Connect repository.
+4. Select **Docker Runtime**.
+5. Add environment variables.
+6. Deploy.
 
 ---
 
-## API reference
+# 📌 Environment Variables
 
-### Auth
-
-```
-POST /auth/signup     Create a new user account
-POST /auth/login      Login and receive a JWT access token
-```
-
-### Documents
-
-```
-POST /documents/upload    Upload a PDF or TXT file (auth required)
-GET  /documents/          List all documents for the current user (auth required)
-```
-
-### Chat
-
-```
-POST /chat/    Ask a question about a document (auth required)
-```
-
-Example request body for `/chat/`:
-
-```json
-{
-  "document_id": 1,
-  "question": "What are the main findings of this document?"
-}
-```
-
-Example response:
-
-```json
-{
-  "question": "What are the main findings of this document?",
-  "answer": "Based on the document, the main findings are...",
-  "sources": [
-    "chunk 1 text that was used...",
-    "chunk 2 text that was used...",
-    "chunk 3 text that was used..."
-  ]
-}
-```
-
-All protected endpoints require the header:
-
-```
-Authorization: Bearer <your_access_token>
-```
+| Variable           | Description                       |
+| ------------------ | --------------------------------- |
+| DATABASE_URL       | PostgreSQL connection string      |
+| SECRET_KEY         | Secret key used for JWT           |
+| ALGORITHM          | JWT algorithm (`HS256`)           |
+| ACCESS_TOKEN_TIME  | Access token expiration (minutes) |
+| REFRESH_TOKEN_TIME | Refresh token expiration (days)   |
+| GROQ_API_KEY       | Groq API key                      |
 
 ---
 
-## How the RAG pipeline works
+# 🎯 Key Interview Concepts
 
-```
-PDF/TXT upload
-     │
-     ▼
-Extract text (PyPDF2 / plain decode)
-     │
-     ▼
-Split into 500-character word chunks
-     │
-     ▼
-Embed each chunk → 384-dimensional vector (all-MiniLM-L6-v2)
-     │
-     ▼
-Store chunks + vectors in PostgreSQL (pgvector)
-     │
-   (later, on chat request)
-     │
-     ▼
-Embed the user's question → query vector
-     │
-     ▼
-Cosine similarity search → top 3 most relevant chunks
-     │
-     ▼
-Send chunks as context to Groq (LLaMA 3.3 70B)
-     │
-     ▼
-Return AI answer + source chunks
-```
+## What is RAG?
+
+Retrieval-Augmented Generation (RAG) combines information retrieval with Large Language Models to generate responses grounded in external knowledge instead of relying solely on the model's training data.
 
 ---
 
-## Deployment (Render)
+## Why pgvector?
 
-### 1. Database — Supabase (free, no expiry)
-
-Create a free project at [supabase.com](https://supabase.com), enable the `vector` extension, and copy the direct connection URL.
-
-### 2. API — Render Web Service
-
-1. Push your code to GitHub
-2. Render dashboard → New → Web Service → connect your repo
-3. Runtime: **Docker**
-4. Port: `8000`
-5. Add environment variables (same as your `.env` but pointing to Supabase)
-
-That's it. No separate ChromaDB service needed — vectors live in the same Postgres database.
+pgvector enables efficient vector similarity search directly inside PostgreSQL, allowing relational and vector data to live in the same database.
 
 ---
 
-## Environment variables
+## Why FastEmbed?
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `SECRET_KEY` | Secret used to sign JWT tokens |
-| `ALGORITHM` | JWT algorithm (use `HS256`) |
-| `ACCESS_TOKEN_TIME` | Access token expiry in minutes |
-| `REFRESH_TOKEN_TIME` | Refresh token expiry in days |
-| `GROQ_API_KEY` | API key from console.groq.com |
+FastEmbed generates embeddings locally with low latency and zero API cost.
 
 ---
 
-## Key concepts for interviews
+## Why BGE Embeddings?
 
-**What is RAG?** Retrieval Augmented Generation — instead of relying on the LLM's training data, you retrieve relevant context from your own documents and feed it to the model at inference time. The model answers only from that context.
-
-**Why pgvector instead of ChromaDB?** pgvector adds vector similarity search directly to PostgreSQL. One database handles both relational data (users, documents) and vector search — simpler infrastructure, no extra service to maintain.
-
-**Why sentence-transformers?** `all-MiniLM-L6-v2` runs locally (no API cost), produces 384-dimensional embeddings, and is fast enough for a document chatbot. Good balance of speed and quality.
-
-**Why Groq?** Groq provides extremely fast LLM inference (LLaMA 3.3 70B) with a generous free tier — ideal for projects and demos.
+`BAAI/bge-small-en-v1.5` provides strong semantic retrieval performance while remaining lightweight and efficient.
 
 ---
 
-## License
+## Why Groq?
 
-MIT
+Groq provides extremely fast inference for open-source LLMs with a generous free tier, making it ideal for RAG applications and prototyping.
+
+---
+
+# 📄 License
+
+MIT License
