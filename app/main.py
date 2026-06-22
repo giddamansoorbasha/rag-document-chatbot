@@ -15,7 +15,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://rag-ui-phi-eight.vercel.app"
+        "https://rag-chatbot-ui-phi.vercel.app/"
     ],
     allow_credentials=True,
     allow_methods=["*"],
