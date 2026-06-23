@@ -6,9 +6,7 @@ Built with **FastAPI**, **PostgreSQL + pgvector**, and **Groq LLMs**.
 
 ## 🚀 Live Demo
 
-### Swagger API Documentation
-
-https://rag-document-chatbot-3jqq.onrender.com/docs
+ https://rag-chatbot-ui-phi.vercel.app/
 
 ---
 
